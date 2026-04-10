@@ -3,10 +3,10 @@
 #define PLUG_VERSION_HEX 0x00000000
 #define PLUG_VERSION_STR "0.0.0"
 #define PLUG_UNIQUE_ID '9c0G'
-#define PLUG_MFR_ID 'Acme'
+#define PLUG_MFR_ID 'OKA'
 #define PLUG_URL_STR "https://iplug2.github.io"
 #define PLUG_EMAIL_STR "spam@me.com"
-#define PLUG_COPYRIGHT_STR "Copyright 2025 Acme Inc"
+#define PLUG_COPYRIGHT_STR "Copyright 2025 OneKnobAudio"
 #define PLUG_CLASS_NAME Puncher
 
 #define BUNDLE_NAME "Puncher"

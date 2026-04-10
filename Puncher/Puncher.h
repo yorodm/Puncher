@@ -6,14 +6,18 @@ const int kNumPresets = 1;
 
 enum EParams
 {
-  kParamGain = 0,
+  kParamAttack = 0,
+  kParamSustain,
+  kParamOutput,
   kNumParams
 };
 
 enum ECtrlTags
 {
   kCtrlTagVersionNumber = 0,
-  kCtrlTagSlider,
+  kCtrlTagAttack,
+  kCtrlTagSustain,
+  kCtrlTagOutput,
   kCtrlTagTitle
 };
 
@@ -28,8 +32,21 @@ public:
 #if IPLUG_EDITOR
   bool OnHostRequestingSupportedViewConfiguration(int width, int height) override { return true; }
 #endif
+
+  void OnReset() override;
   
 #if IPLUG_DSP // http://bit.ly/2S64BDd
   void ProcessBlock(sample** inputs, sample** outputs, int nFrames) override;
 #endif
+
+private:
+  double mA0Env1 = 0.0;
+  double mB1Env1 = 0.0;
+  double mA0Env2 = 0.0;
+  double mB1Env2 = 0.0;
+  double mA0Env3 = 0.0;
+  double mB1Env3 = 0.0;
+  double mTmpEnv1 = 0.0;
+  double mTmpEnv2 = 0.0;
+  double mTmpEnv3 = 0.0;
 };
