@@ -11,7 +11,7 @@ concurrency:
 env:
   BUILD_DIR: build-win
   ARTIFACT_EXT: win
-  PLUGINVAL_VER: v1.0.4
+  PLUGINVAL_VER: v0.1.0
   CLAP_VER: "main"
   CLAP_VALIDATOR_VER: "0.3.2"
 
@@ -22,79 +22,79 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [TemplateProject]
+        project: [Puncher]
         # Add more projects here:
         # project: [TemplateProject, VisageTemplate]
 
     steps:
-    - name: Check out repository
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Cache Prebuilt Libs
-      id: cache-deps
-      uses: actions/cache@v3
-      with:
-        path: |
-          iPlug2/Dependencies/Build
-        key: ${{runner.os}}-deps-${{hashFiles('iPlug2/Dependencies/download-prebuilt-libs.sh')}}
+      - name: Cache Prebuilt Libs
+        id: cache-deps
+        uses: actions/cache@v3
+        with:
+          path: |
+            iPlug2/Dependencies/Build
+          key: ${{runner.os}}-deps-${{hashFiles('iPlug2/Dependencies/download-prebuilt-libs.sh')}}
 
-    - name: Get Prebuilt Libs
-      if: steps.cache-deps.outputs.cache-hit != 'true'
-      shell: bash
-      run: |
-        cd iPlug2/Dependencies
-        ./download-prebuilt-libs.sh
+      - name: Get Prebuilt Libs
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd iPlug2/Dependencies
+          ./download-prebuilt-libs.sh
 
-    - name: Get VST3 SDK
-      shell: bash
-      run: |
-        cd iPlug2/Dependencies/IPlug
-        ./download-vst3-sdk.sh
+      - name: Get VST3 SDK
+        shell: bash
+        run: |
+          cd iPlug2/Dependencies/IPlug
+          ./download-vst3-sdk.sh
 
-    - name: Get VST2 SDK
-      shell: bash
-      env:
-        VST2_SDK: ${{secrets.VST2_SDK}}
-      run: |
-        set -eo pipefail
-        mkdir tmp
-        echo $VST2_SDK | base64 -d > tmp/tmp.zip
-        unzip tmp/tmp.zip -d tmp
-        mv tmp/VST2_SDK/* iPlug2/Dependencies/IPlug/VST2_SDK
+      - name: Get VST2 SDK
+        shell: bash
+        env:
+          VST2_SDK: ${{secrets.VST2_SDK}}
+        run: |
+          set -eo pipefail
+          mkdir tmp
+          echo $VST2_SDK | base64 -d > tmp/tmp.zip
+          unzip tmp/tmp.zip -d tmp
+          mv tmp/VST2_SDK/* iPlug2/Dependencies/IPlug/VST2_SDK
 
-    - name: Cache CLAP SDK
-      id: cache-clap
-      uses: actions/cache@v3
-      with:
-        path: |
-          iPlug2/Dependencies/IPlug/CLAP_SDK
-          iPlug2/Dependencies/IPlug/CLAP_HELPERS
-        key: ${{runner.os}}-clap-${{env.CLAP_VER}}
+      - name: Cache CLAP SDK
+        id: cache-clap
+        uses: actions/cache@v3
+        with:
+          path: |
+            iPlug2/Dependencies/IPlug/CLAP_SDK
+            iPlug2/Dependencies/IPlug/CLAP_HELPERS
+          key: ${{runner.os}}-clap-${{env.CLAP_VER}}
 
-    - name: Get CLAP SDK
-      if: steps.cache-clap.outputs.cache-hit != 'true'
-      shell: bash
-      run: |
-        cd iPlug2/Dependencies/IPlug
-        ./download-clap-sdks.sh ${{env.CLAP_VER}}
+      - name: Get CLAP SDK
+        if: steps.cache-clap.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd iPlug2/Dependencies/IPlug
+          ./download-clap-sdks.sh ${{env.CLAP_VER}}
 
-    - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v2
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v2
 
-    - name: Build
-      shell: pwsh
-      run: |
-        cd ${{matrix.project}}\scripts
-        .\makedist-win.bat full zip
+      - name: Build
+        shell: pwsh
+        run: |
+          cd ${{matrix.project}}\scripts
+          .\makedist-win.bat full zip
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{matrix.project}}-${{env.ARTIFACT_EXT}}
-        path: |
-          ${{matrix.project}}/${{env.BUILD_DIR}}/out
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{matrix.project}}-${{env.ARTIFACT_EXT}}
+          path: |
+            ${{matrix.project}}/${{env.BUILD_DIR}}/out
 
   test-win:
     name: Test Windows (${{matrix.project}})
@@ -103,7 +103,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [TemplateProject]
+        project: [Puncher]
         # Add more projects here:
         # project: [TemplateProject, VisageTemplate]
 

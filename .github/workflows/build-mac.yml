@@ -11,7 +11,7 @@ concurrency:
 env:
   BUILD_DIR: build-mac
   ARTIFACT_EXT: mac
-  PLUGINVAL_VER: v1.0.4
+  PLUGINVAL_VER: v0.1.0
   VST3_VER: v3.8.0_build_66
   CLAP_VER: "main"
   CLAP_VALIDATOR_VER: "0.3.2"
@@ -23,87 +23,87 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [TemplateProject]
+        project: [Puncher]
         # Add more projects here:
         # project: [TemplateProject, VisageTemplate]
 
     steps:
-    - name: Check out repository
-      uses: actions/checkout@v3.3.0
-      with:
-        submodules: recursive
+      - name: Check out repository
+        uses: actions/checkout@v3.3.0
+        with:
+          submodules: recursive
 
-    - name: Cache Prebuilt Libs
-      id: cache-deps
-      uses: actions/cache@v3
-      with:
-        path: |
-          iPlug2/Dependencies/Build
-          iPlug2/Dependencies/iPlug
-        key: ${{runner.os}}-deps-${{hashFiles('iPlug2/Dependencies/download-prebuilt-libs.sh', 'iPlug2/Dependencies/IGraphics/build-igraphics-libs-mac.sh', 'iPlug2/Dependencies/IGraphics/build-skia-mac.sh')}}
+      - name: Cache Prebuilt Libs
+        id: cache-deps
+        uses: actions/cache@v3
+        with:
+          path: |
+            iPlug2/Dependencies/Build
+            iPlug2/Dependencies/iPlug
+          key: ${{runner.os}}-deps-${{hashFiles('iPlug2/Dependencies/download-prebuilt-libs.sh', 'iPlug2/Dependencies/IGraphics/build-igraphics-libs-mac.sh', 'iPlug2/Dependencies/IGraphics/build-skia-mac.sh')}}
 
-    - name: Get Prebuilt Libs
-      if: steps.cache-deps.outputs.cache-hit != 'true'
-      shell: bash
-      run: |
-        cd iPlug2/Dependencies
-        ./download-prebuilt-libs.sh
+      - name: Get Prebuilt Libs
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd iPlug2/Dependencies
+          ./download-prebuilt-libs.sh
 
-    - name: Cache VST3 SDK
-      id: cache-vst3
-      uses: actions/cache@v3
-      with:
-        path: |
-          iPlug2/Dependencies/IPlug/VST3_SDK
-        key: ${{runner.os}}-vst3-${{env.VST3_VER}}
+      - name: Cache VST3 SDK
+        id: cache-vst3
+        uses: actions/cache@v3
+        with:
+          path: |
+            iPlug2/Dependencies/IPlug/VST3_SDK
+          key: ${{runner.os}}-vst3-${{env.VST3_VER}}
 
-    - name: Get VST3 SDK
-      if: steps.cache-vst3.outputs.cache-hit != 'true'
-      shell: bash
-      run: |
-        cd iPlug2/Dependencies/IPlug
-        ./download-vst3-sdk.sh ${{env.VST3_VER}} build-validator
+      - name: Get VST3 SDK
+        if: steps.cache-vst3.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd iPlug2/Dependencies/IPlug
+          ./download-vst3-sdk.sh ${{env.VST3_VER}} build-validator
 
-    - name: Get VST2 SDK
-      shell: bash
-      env:
-        VST2_SDK: ${{secrets.VST2_SDK}}
-      run: |
-        set -eo pipefail
-        mkdir tmp
-        echo $VST2_SDK | base64 -d > tmp/tmp.zip
-        unzip tmp/tmp.zip -d tmp
-        mv tmp/VST2_SDK/* iPlug2/Dependencies/IPlug/VST2_SDK
+      - name: Get VST2 SDK
+        shell: bash
+        env:
+          VST2_SDK: ${{secrets.VST2_SDK}}
+        run: |
+          set -eo pipefail
+          mkdir tmp
+          echo $VST2_SDK | base64 -d > tmp/tmp.zip
+          unzip tmp/tmp.zip -d tmp
+          mv tmp/VST2_SDK/* iPlug2/Dependencies/IPlug/VST2_SDK
 
-    - name: Cache CLAP SDK
-      id: cache-clap
-      uses: actions/cache@v3
-      with:
-        path: |
-          iPlug2/Dependencies/IPlug/CLAP_SDK
-          iPlug2/Dependencies/IPlug/CLAP_HELPERS
-        key: ${{runner.os}}-clap-${{env.CLAP_VER}}
+      - name: Cache CLAP SDK
+        id: cache-clap
+        uses: actions/cache@v3
+        with:
+          path: |
+            iPlug2/Dependencies/IPlug/CLAP_SDK
+            iPlug2/Dependencies/IPlug/CLAP_HELPERS
+          key: ${{runner.os}}-clap-${{env.CLAP_VER}}
 
-    - name: Get CLAP SDK
-      if: steps.cache-clap.outputs.cache-hit != 'true'
-      shell: bash
-      run: |
-        cd iPlug2/Dependencies/IPlug
-        ./download-clap-sdks.sh ${{env.CLAP_VER}}
+      - name: Get CLAP SDK
+        if: steps.cache-clap.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd iPlug2/Dependencies/IPlug
+          ./download-clap-sdks.sh ${{env.CLAP_VER}}
 
-    - name: Build
-      shell: bash
-      run: |
-        set -eo pipefail
-        cd ${{matrix.project}}/scripts
-        ./makedist-mac.sh full zip
+      - name: Build
+        shell: bash
+        run: |
+          set -eo pipefail
+          cd ${{matrix.project}}/scripts
+          ./makedist-mac.sh full zip
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{matrix.project}}-${{env.ARTIFACT_EXT}}
-        path: |
-          ${{matrix.project}}/${{env.BUILD_DIR}}/out
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{matrix.project}}-${{env.ARTIFACT_EXT}}
+          path: |
+            ${{matrix.project}}/${{env.BUILD_DIR}}/out
 
   test-mac:
     name: Test macOS (${{matrix.project}})
@@ -112,7 +112,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [TemplateProject]
+        project: [Puncher]
         # Add more projects here:
         # project: [TemplateProject, VisageTemplate]
 
