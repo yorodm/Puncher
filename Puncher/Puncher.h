@@ -24,6 +24,11 @@ enum ECtrlTags
 using namespace iplug;
 using namespace igraphics;
 
+class PuncherEditor {
+    public:
+        void CreateEditor(IGraphics* pGraphics, WDL_String buildInfo);
+};
+
 class Puncher final : public Plugin
 {
 public:
@@ -34,12 +39,13 @@ public:
 #endif
 
   void OnReset() override;
-  
+
 #if IPLUG_DSP // http://bit.ly/2S64BDd
   void ProcessBlock(sample** inputs, sample** outputs, int nFrames) override;
 #endif
 
 private:
+  PuncherEditor  pEditor = PuncherEditor();
   double mA0Env1 = 0.0;
   double mB1Env1 = 0.0;
   double mA0Env2 = 0.0;

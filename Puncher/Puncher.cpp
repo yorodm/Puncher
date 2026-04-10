@@ -17,8 +17,32 @@ Puncher::Puncher(const InstanceInfo& info)
   mMakeGraphicsFunc = [&]() {
     return MakeGraphics(*this, PLUG_WIDTH, PLUG_HEIGHT, PLUG_FPS);
   };
-  
+
   mLayoutFunc = [&](IGraphics* pGraphics) {
+      WDL_String buildInfoStr;
+      GetBuildInfoStr(buildInfoStr, __DATE__, __TIME__);
+      pEditor.CreateEditor(pGraphics, buildInfoStr);
+  };
+#endif
+}
+
+void Puncher::OnReset()
+{
+  const double sr = GetSampleRate();
+  mA0Env1 = 1.0 - exp(-30.0 / sr);
+  mB1Env1 = -exp(-30.0 / sr);
+  mA0Env2 = 1.0 - exp(-1250.0 / sr);
+  mB1Env2 = -exp(-1250.0 / sr);
+  mA0Env3 = 1.0 - exp(-3.0 / sr);
+  mB1Env3 = -exp(-3.0 / sr);
+
+  mTmpEnv1 = 0.0;
+  mTmpEnv2 = 0.0;
+  mTmpEnv3 = 0.0;
+}
+
+#if IPLUG_EDITOR
+void PuncherEditor::CreateEditor(IGraphics* pGraphics, WDL_String buildInfoStr) {
     const IRECT bounds = pGraphics->GetBounds();
     const IRECT innerBounds = bounds.GetPadded(-10.f);
     const IRECT titleBounds = innerBounds.GetGridCell(0, 0, 3, 1).GetCentredInside(200, 50);
@@ -44,31 +68,13 @@ Puncher::Puncher(const InstanceInfo& info)
     pGraphics->AttachControl(new IVSliderControl(sliderBounds.GetGridCell(0, 1, 1, 3).GetPadded(-10.f), kParamSustain, "Sustain"), kCtrlTagSustain);
     pGraphics->AttachControl(new IVSliderControl(sliderBounds.GetGridCell(0, 2, 1, 3).GetPadded(-10.f), kParamOutput, "Output"), kCtrlTagOutput);
     pGraphics->AttachControl(new ITextControl(titleBounds, "Puncher", IText(30)), kCtrlTagTitle);
-    WDL_String buildInfoStr;
-    GetBuildInfoStr(buildInfoStr, __DATE__, __TIME__);
     pGraphics->AttachControl(new ITextControl(versionBounds, buildInfoStr.Get(), DEFAULT_TEXT.WithAlign(EAlign::Far)), kCtrlTagVersionNumber);
-  };
+}
 #endif
-}
-
-void Puncher::OnReset()
-{
-  const double sr = GetSampleRate();
-  mA0Env1 = 1.0 - exp(-30.0 / sr);
-  mB1Env1 = -exp(-30.0 / sr);
-  mA0Env2 = 1.0 - exp(-1250.0 / sr);
-  mB1Env2 = -exp(-1250.0 / sr);
-  mA0Env3 = 1.0 - exp(-3.0 / sr);
-  mB1Env3 = -exp(-3.0 / sr);
-
-  mTmpEnv1 = 0.0;
-  mTmpEnv2 = 0.0;
-  mTmpEnv3 = 0.0;
-}
 
 #if IPLUG_DSP
 void Puncher::ProcessBlock(sample** inputs, sample** outputs, int nFrames)
-{ 
+{
   const int nChans = std::min(NInChansConnected(), NOutChansConnected());
   if (nChans <= 0) {
     return;

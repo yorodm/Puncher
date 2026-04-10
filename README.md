@@ -1,9 +1,36 @@
-![Build WAM](https://github.com/iPlug2/iPlug2OOS/workflows/Build%20WAM/badge.svg)
+# Puncher
 
-This repo contains an "out of source" iPlug2 template project, which is desirable when you need to keep all your project dependencies synchronised with version control and build it using CI/CD in the cloud. It set up for "containerized development" using [VSCode](https://code.visualstudio.com/docs/devcontainers/containers) and [github codespaces](https://github.com/features/codespaces).
+**Puncher** is a transient shaping audio plugin built with the [iPlug2](https://github.com/iPlug2/iPlug2) framework. It provides precise control over the attack and sustain characteristics of audio signals, making it ideal for enhancing drums, percussion, and other transient-rich material.
 
-Instead of using the common-mac.xcconfig and common-win.xcconfig in the iPlug2 folder, it uses copies of them at the top level of the iPlug2OOS repo. This means the iPlug2 submodule itself does not have to be modified.
+This is a port of Reapers's JSFX Transient Controller.
 
-https://github.com/iPlug2/iPlug2/wiki/Out-of-source-builds
+## What It Does
 
-Containerized development is documented [here](https://docs.google.com/document/d/e/2PACX-1vT6lYZ3vtYKWAty2g6DL994IO0_pfyGctDdKfPxF6MZwOgFWENfLuVtBW9J0-KzLsfPSKKN055UnAmj/pub)
+Puncher uses a multi-stage envelope follower algorithm to analyze and shape the transient response of your audio:
+
+- **Attack Control**: Emphasize or soften the initial hit of transients (-100% to +100%)
+- **Sustain Control**: Adjust the body and tail of the sound (-100% to +100%)  
+- **Output Gain**: Fine-tune the output level (-12 dB to +6 dB)
+
+## Technical Details
+
+- **Formats**: VST3, AU v2/v3, AAX (with AudioSuite), CLAP, Standalone App
+- **Platforms**: macOS (Intel/Apple Silicon), Windows, iOS, Linux (CLAP)
+- **Channels**: Stereo (2-in/2-out)
+- **Latency**: 0 samples
+- **UI**: Resizable interface (256x256 to 8192x8192)
+
+## Building
+
+Requires CMake 3.25+ and the iPlug2 framework cloned to `../iPlug2`:
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
+```
+
+Or use the provided IDE files (`Puncher.sln` for Visual Studio, `Puncher.xcworkspace` for Xcode).
+
+## License
+
+Copyright © 2025 OneKnobAudio. All rights reserved.
