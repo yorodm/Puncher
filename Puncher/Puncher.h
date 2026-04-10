@@ -18,11 +18,17 @@ enum ECtrlTags
   kCtrlTagAttack,
   kCtrlTagSustain,
   kCtrlTagOutput,
-  kCtrlTagTitle
+  kCtrlTagTitle,
+  kCtrlTagEnvelope
 };
-
 using namespace iplug;
 using namespace igraphics;
+
+#if IPLUG_EDITOR
+#include "EnvelopeDisplayControl.h"
+#endif
+
+
 
 class PuncherEditor {
     public:

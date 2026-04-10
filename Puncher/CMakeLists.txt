@@ -8,6 +8,8 @@ find_package(iPlug2 REQUIRED)
 
 iplug_add_plugin(${PROJECT_NAME}
   SOURCES
+    EnvelopeDisplayControl.cpp
+    EnvelopeDisplayControl.h
     Puncher.cpp
     Puncher.h
     resources/resource.h

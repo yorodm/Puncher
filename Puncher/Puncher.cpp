@@ -45,17 +45,29 @@ void Puncher::OnReset()
 void PuncherEditor::CreateEditor(IGraphics* pGraphics, WDL_String buildInfoStr) {
     const IRECT bounds = pGraphics->GetBounds();
     const IRECT innerBounds = bounds.GetPadded(-10.f);
-    const IRECT titleBounds = innerBounds.GetGridCell(0, 0, 3, 1).GetCentredInside(200, 50);
-    const IRECT controlBounds = innerBounds.GetFromBottom(180).GetPadded(10.f);
-    const IRECT sliderBounds = controlBounds.GetGridCell(0, 0, 1, 3);
-    const IRECT versionBounds = innerBounds.GetFromTRHC(300, 20);
+
+    // Split into left (title + envelope) and right (sliders) sections
+    const IRECT leftPanel = innerBounds.GetFromLeft(340);
+    const IRECT rightPanel = innerBounds.GetFromRight(240);
+
+    // Left panel: title at top, envelope display fills rest
+    const IRECT titleBounds = leftPanel.GetFromTop(50).GetCentredInside(200, 40);
+    const IRECT envelopeBounds = leftPanel.GetPadded(0, 10, 0, 0);
+
+    // Right panel: three vertical sliders
+    const IRECT sliderPanel = rightPanel.GetPadded(-10);
+    const IRECT sliderBounds = sliderPanel;
+
+    // Version string at bottom-right
+    const IRECT versionBounds = rightPanel.GetFromBottom(20).GetFromRight(280);
 
     if (pGraphics->NControls()) {
       pGraphics->GetBackgroundControl()->SetTargetAndDrawRECTs(bounds);
-      pGraphics->GetControlWithTag(kCtrlTagAttack)->SetTargetAndDrawRECTs(sliderBounds.GetGridCell(0, 0, 1, 3));
-      pGraphics->GetControlWithTag(kCtrlTagSustain)->SetTargetAndDrawRECTs(sliderBounds.GetGridCell(0, 1, 1, 3));
-      pGraphics->GetControlWithTag(kCtrlTagOutput)->SetTargetAndDrawRECTs(sliderBounds.GetGridCell(0, 2, 1, 3));
       pGraphics->GetControlWithTag(kCtrlTagTitle)->SetTargetAndDrawRECTs(titleBounds);
+      pGraphics->GetControlWithTag(kCtrlTagEnvelope)->SetTargetAndDrawRECTs(envelopeBounds);
+      pGraphics->GetControlWithTag(kCtrlTagAttack)->SetTargetAndDrawRECTs(sliderBounds.GetGridCell(0, 0, 1, 3).GetPadded(-8));
+      pGraphics->GetControlWithTag(kCtrlTagSustain)->SetTargetAndDrawRECTs(sliderBounds.GetGridCell(0, 1, 1, 3).GetPadded(-8));
+      pGraphics->GetControlWithTag(kCtrlTagOutput)->SetTargetAndDrawRECTs(sliderBounds.GetGridCell(0, 2, 1, 3).GetPadded(-8));
       pGraphics->GetControlWithTag(kCtrlTagVersionNumber)->SetTargetAndDrawRECTs(versionBounds);
       return;
     }
@@ -64,10 +76,17 @@ void PuncherEditor::CreateEditor(IGraphics* pGraphics, WDL_String buildInfoStr) 
     pGraphics->AttachCornerResizer(EUIResizerMode::Size, true);
     pGraphics->LoadFont("Roboto-Regular", ROBOTO_FN);
     pGraphics->AttachPanelBackground(COLOR_LIGHT_GRAY);
-    pGraphics->AttachControl(new IVSliderControl(sliderBounds.GetGridCell(0, 0, 1, 3).GetPadded(-10.f), kParamAttack, "Attack"), kCtrlTagAttack);
-    pGraphics->AttachControl(new IVSliderControl(sliderBounds.GetGridCell(0, 1, 1, 3).GetPadded(-10.f), kParamSustain, "Sustain"), kCtrlTagSustain);
-    pGraphics->AttachControl(new IVSliderControl(sliderBounds.GetGridCell(0, 2, 1, 3).GetPadded(-10.f), kParamOutput, "Output"), kCtrlTagOutput);
+
+    // Left panel controls
     pGraphics->AttachControl(new ITextControl(titleBounds, "Puncher", IText(30)), kCtrlTagTitle);
+    pGraphics->AttachControl(new EnvelopeDisplayControl(envelopeBounds, kParamAttack, kParamSustain, kParamOutput), kCtrlTagEnvelope);
+
+    // Right panel controls
+    pGraphics->AttachControl(new IVSliderControl(sliderBounds.GetGridCell(0, 0, 1, 3).GetPadded(-8), kParamAttack, "Attack"), kCtrlTagAttack);
+    pGraphics->AttachControl(new IVSliderControl(sliderBounds.GetGridCell(0, 1, 1, 3).GetPadded(-8), kParamSustain, "Sustain"), kCtrlTagSustain);
+    pGraphics->AttachControl(new IVSliderControl(sliderBounds.GetGridCell(0, 2, 1, 3).GetPadded(-8), kParamOutput, "Output"), kCtrlTagOutput);
+
+    // Version string
     pGraphics->AttachControl(new ITextControl(versionBounds, buildInfoStr.Get(), DEFAULT_TEXT.WithAlign(EAlign::Far)), kCtrlTagVersionNumber);
 }
 #endif
