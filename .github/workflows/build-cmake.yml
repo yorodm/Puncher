@@ -3,43 +3,43 @@ name: Build CMake
 on:
   push:
     paths:
-      - 'iPlug2/Scripts/cmake/**'
-      - 'iPlug2/iPlug2.cmake'
-      - '**/CMakeLists.txt'
-      - 'CMakePresets.json'
-      - '.github/workflows/build-cmake.yml'
+      - "iPlug2/Scripts/cmake/**"
+      - "iPlug2/iPlug2.cmake"
+      - "**/CMakeLists.txt"
+      - "CMakePresets.json"
+      - ".github/workflows/build-cmake.yml"
   pull_request:
     paths:
-      - 'iPlug2/Scripts/cmake/**'
-      - 'iPlug2/iPlug2.cmake'
-      - '**/CMakeLists.txt'
-      - 'CMakePresets.json'
+      - "iPlug2/Scripts/cmake/**"
+      - "iPlug2/iPlug2.cmake"
+      - "**/CMakeLists.txt"
+      - "CMakePresets.json"
   issue_comment:
     types: [created]
   workflow_dispatch:
     inputs:
       all_generators:
-        description: 'Test all generators (Ninja, Make)'
+        description: "Test all generators (Ninja, Make)"
         type: boolean
         default: false
       ios:
-        description: 'Include iOS build'
+        description: "Include iOS build"
         type: boolean
         default: false
       wam:
-        description: 'Include WAM/Emscripten build'
+        description: "Include WAM/Emscripten build"
         type: boolean
         default: false
       universal:
-        description: 'Include macOS Universal build (arm64+x86_64)'
+        description: "Include macOS Universal build (arm64+x86_64)"
         type: boolean
         default: false
       backends:
-        description: 'Include IGraphics backends matrix'
+        description: "Include IGraphics backends matrix"
         type: boolean
         default: false
       arm64ec:
-        description: 'Include Windows ARM64EC build'
+        description: "Include Windows ARM64EC build"
         type: boolean
         default: false
 
@@ -49,7 +49,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PROJECT_NAME: TemplateProject
+  PROJECT_NAME: Puncher
 
 jobs:
   # ============================================================================
@@ -672,7 +672,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
       - name: Setup Emscripten
         uses: mymindstorm/setup-emsdk@v14
