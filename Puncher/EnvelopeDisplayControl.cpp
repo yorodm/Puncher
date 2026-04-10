@@ -2,15 +2,14 @@
 #include "Puncher.h"
 
 EnvelopeDisplayControl::EnvelopeDisplayControl(const IRECT& bounds, int attackParam, int sustainParam, int outputParam)
-: IControl(bounds), mAttackParam(attackParam), mSustainParam(sustainParam), mOutputParam(outputParam)
+: IControl(bounds, {attackParam, sustainParam, outputParam})
+, mAttackParam(attackParam), mSustainParam(sustainParam), mOutputParam(outputParam)
 {
-  SetParamIdx(mAttackParam, 0);
-  SetParamIdx(mSustainParam, 1);
-  SetParamIdx(mOutputParam, 2);
 }
 
 void EnvelopeDisplayControl::OnResize()
 {
+  if(mRECT.Empty()) return; // Not sure if I need to guard against this
   const float pad = 10.f;
   const float bottomPad = 30.f; // space for labels
   mPlotBounds = mRECT.GetPadded(-pad, -pad, -pad, -bottomPad);
