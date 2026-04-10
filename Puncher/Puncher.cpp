@@ -1,5 +1,6 @@
 #include "Puncher.h"
 #include "IPlug_include_in_plug_src.h"
+#include <algorithm>
 
 #if IPLUG_EDITOR
 #include "IControls.h"
@@ -68,7 +69,7 @@ void Puncher::OnReset()
 #if IPLUG_DSP
 void Puncher::ProcessBlock(sample** inputs, sample** outputs, int nFrames)
 { 
-  const int nChans = NInChansConnected() < NOutChansConnected() ? NInChansConnected() : NOutChansConnected();
+  const int nChans = std::min(NInChansConnected(), NOutChansConnected());
   if (nChans <= 0) {
     return;
   }
@@ -80,7 +81,7 @@ void Puncher::ProcessBlock(sample** inputs, sample** outputs, int nFrames)
   for (int s = 0; s < nFrames; s++) {
     const double spl0 = inputs[0][s];
     const double spl1 = (nChans > 1) ? inputs[1][s] : spl0;
-    const double maxSpls = fabs(spl0) > fabs(spl1) ? fabs(spl0) : fabs(spl1);
+    const double maxSpls = std::max(fabs(spl0), fabs(spl1));
 
     mTmpEnv1 = mA0Env1 * maxSpls - mB1Env1 * mTmpEnv1;
     const double env1 = sqrt(mTmpEnv1);
@@ -90,8 +91,8 @@ void Puncher::ProcessBlock(sample** inputs, sample** outputs, int nFrames)
     const double env3 = sqrt(mTmpEnv3);
 
     const double safeEnv1 = env1 > 1e-20 ? env1 : 1.0;
-    const double ratio2 = (env2 / safeEnv1) > 1.0 ? (env2 / safeEnv1) : 1.0;
-    const double ratio3 = (env3 / safeEnv1) > 1.0 ? (env3 / safeEnv1) : 1.0;
+    const double ratio2 = std::max(env2 / safeEnv1, 1.0);
+    const double ratio3 = std::max(env3 / safeEnv1, 1.0);
     const double gain = vol * pow(ratio2, attack) * pow(ratio3, sustain);
 
     for (int c = 0; c < nChans; c++) {
