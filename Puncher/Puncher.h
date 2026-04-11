@@ -61,11 +61,11 @@ private:
   double mTmpEnv2 = 0.0;
   double mTmpEnv3 = 0.0;
 
-  IPeakSender<2> mInputPeakSender;
-  IPeakSender<2> mOutputPeakSender;
+  IPeakAvgSender<2> mInputPeakSender;
+  IPeakAvgSender<2> mOutputPeakSender;
 #if IPLUG_EDITOR
-  IVMeterControl<2>* mInputMeter = nullptr;
-  IVMeterControl<2>* mOutputMeter = nullptr;
+  IVLEDMeterControl<2>* mInputMeter = nullptr;
+  IVLEDMeterControl<2>* mOutputMeter = nullptr;
 #endif
 };
 
