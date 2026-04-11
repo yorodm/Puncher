@@ -1,8 +1,8 @@
 #include "IVolumeNiceMeter.h"
 #include "IGraphics.h"
+#include "ISender.h"
 #include <cmath>
 #include <algorithm>
-#include <chrono>
 
 IVolumeNiceMeter::IVolumeNiceMeter(const IRECT& bounds)
 : IControl(bounds)
@@ -20,43 +20,39 @@ float IVolumeNiceMeter::DBToNorm(float db) const
 
 void IVolumeNiceMeter::OnMsgFromDelegate(int msgTag, int dataSize, const void* pData)
 {
-  if (dataSize == sizeof(float) * 2)
+  if (!IsDisabled() && msgTag == ISender<>::kUpdateMessage)
   {
-    const float* levels = (const float*) pData;
-    double now = std::chrono::duration_cast<std::chrono::milliseconds>(
-                   std::chrono::steady_clock::now().time_since_epoch()).count() / 1000.0;
+    IByteStream stream(pData, dataSize);
+    int pos = 0;
+    ISenderData<2, std::pair<float, float>> d;
+    stream.Get(&d, pos);
 
-    for (int ch = 0; ch < 2; ch++)
+    for (int c = d.chanOffset; c < (d.chanOffset + d.nChans); c++)
     {
-      float amp = std::max(0.f, levels[ch]);
-      float db = AmpToDB(amp);
+      float peakAmp = std::get<0>(d.vals[c]);
+      float avgAmp  = std::get<1>(d.vals[c]);
 
-      mLevels[ch] = db;
+      mPeakDB[c] = AmpToDB(peakAmp);
+      mAvgDB[c]  = AmpToDB(avgAmp);
 
-      // Clip detection
-      mClip[ch] = amp >= 1.f;
-
-      // Peak logic
-      if (db > mPeaks[ch])
-      {
-        mPeaks[ch] = db;
-        mLastUpdateTime[ch] = now;
-      }
-      else
-      {
-        double dt = now - mLastUpdateTime[ch];
-
-        if (dt > mPeakHoldTime)
-        {
-          mPeaks[ch] -= mPeakDecay * dt;
-          mPeaks[ch] = std::max(mPeaks[ch], mMinDB);
-          mLastUpdateTime[ch] = now;
-        }
-      }
+      // Clip detection — once set, stays true until reset
+      if (!mClip[c])
+        mClip[c] = peakAmp >= 1.f;
     }
 
     SetDirty(false);
   }
+}
+
+void IVolumeNiceMeter::OnMouseDblClick(float x, float y, const IMouseMod& mod)
+{
+  mClip[0] = false;
+  mClip[1] = false;
+  mPeakDB[0] = mMinDB;
+  mPeakDB[1] = mMinDB;
+  mAvgDB[0] = mMinDB;
+  mAvgDB[1] = mMinDB;
+  SetDirty(false);
 }
 
 void IVolumeNiceMeter::Draw(IGraphics& g)
@@ -69,47 +65,33 @@ void IVolumeNiceMeter::Draw(IGraphics& g)
 
   DrawChannel(g, left, 0);
   DrawChannel(g, right, 1);
-
-  // Draw dB markers
-  for (float db : kMarkers)
-  {
-    float norm = DBToNorm(db);
-    float y = bounds.B - norm * bounds.H();
-
-    g.DrawLine(IColor(120, 255, 255, 255),
-               bounds.L, y,
-               bounds.R, y,
-               nullptr, 1.0f);
-
-    g.DrawText(IText(10),
-               std::to_string((int) db).c_str(),
-               IRECT(bounds.L, y - 6, bounds.L + 30, y + 6));
-  }
 }
 
 void IVolumeNiceMeter::DrawChannel(IGraphics& g, const IRECT& r, int ch)
 {
-  float levelDB = std::clamp(mLevels[ch], mMinDB, mMaxDB);
-  float peakDB  = std::clamp(mPeaks[ch],  mMinDB, mMaxDB);
+  float avgDB   = std::clamp(mAvgDB[ch], mMinDB, mMaxDB);
+  float peakDB  = std::clamp(mPeakDB[ch], mMinDB, mMaxDB);
 
-  float normLevel = DBToNorm(levelDB);
-  float normPeak  = DBToNorm(peakDB);
+  float normAvg  = DBToNorm(avgDB);
+  float normPeak = DBToNorm(peakDB);
 
-  // 3-color gradient (green → yellow → red) via IPattern
-  IPattern grad = IPattern::CreateLinearGradient(
-    r,
-    EDirection::Vertical,
-    {
-      {IColor(255, 255, 0, 0), 1.0f},  // red at the top
-      {IColor(255, 255, 255, 0), 0.7f},   // yellow
-      {IColor(255, 0, 255, 0), 0.0f},     // green at bottom
-    }
-  );
+  // Dark gray background (empty meter area)
+  g.FillRect(IColor(255, 40, 40, 40), r);
 
-  // Fill the bar up to normLevel using PathFill for gradient support
-  IRECT fillRect = r.FracRectVertical(normLevel, false); // false = fill from bottom
+  // Gradient fill for the volume level
+  IRECT fillRect = r.FracRectVertical(normAvg, false);
   if (!fillRect.Empty())
   {
+    IPattern grad = IPattern::CreateLinearGradient(
+      r,
+      EDirection::Vertical,
+      {
+        {IColor(255, 0, 255, 0), 0.0f},     // green at bottom (quiet)
+        {IColor(255, 255, 255, 0), 0.7f},   // yellow
+        {IColor(255, 255, 0, 0), 1.0f}      // red at top (loud)
+      }
+    );
+
     g.PathMoveTo(fillRect.L, fillRect.B);
     g.PathLineTo(fillRect.R, fillRect.B);
     g.PathLineTo(fillRect.R, fillRect.T);
@@ -118,18 +100,10 @@ void IVolumeNiceMeter::DrawChannel(IGraphics& g, const IRECT& r, int ch)
     g.PathFill(grad);
   }
 
-  // Peak line
+  // Always-visible peak indicator
   float peakY = r.B - normPeak * r.H();
+  const IColor peakColor = mClip[ch] ? IColor(255, 255, 60, 60) : IColor(255, 255, 255, 255);
 
-  g.DrawLine(IColor(255, 255, 255, 255),
-             r.L, peakY,
-             r.R, peakY,
-             nullptr, 2.0f);
-
-  // Clip indicator (top bar)
-  if (mClip[ch])
-  {
-    IRECT clipRect = r.GetFromTop(5);
-    g.FillRect(IColor(255, 255, 0, 0), clipRect);
-  }
+  IRECT peakRect = IRECT(r.L, peakY - 1.5f, r.R, peakY + 1.5f);
+  g.FillRect(peakColor, peakRect);
 }

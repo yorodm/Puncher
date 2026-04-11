@@ -14,6 +14,7 @@ public:
 
   void Draw(IGraphics& g) override;
   void OnMsgFromDelegate(int msgTag, int dataSize, const void* pData) override;
+  void OnMouseDblClick(float x, float y, const IMouseMod& mod) override;
 
 private:
   void DrawChannel(IGraphics& g, const IRECT& r, int ch);
@@ -21,20 +22,14 @@ private:
   float DBToNorm(float db) const;
 
 private:
-  std::array<float, 2> mLevels = {0.f, 0.f};
-  std::array<float, 2> mPeaks  = {0.f, 0.f};
+  // dB values for display (avg for bar fill, peak for indicator)
+  std::array<float, 2> mAvgDB   = {-60.f, -60.f};
+  std::array<float, 2> mPeakDB  = {-60.f, -60.f};
 
-  std::array<double, 2> mLastUpdateTime = {0.0, 0.0};
+  // Clip flags (persist until reset)
+  bool mClip[2] = {false, false};
 
   // Settings
   float mMinDB = -60.f;
   float mMaxDB = 0.f;
-
-  float mPeakHoldTime = 0.8f;
-  float mPeakDecay = 20.f; // dB per second
-
-  bool mClip[2] = {false, false};
-
-  // Marker values in dB
-  static constexpr float kMarkers[] = {-60.f, -48.f, -36.f, -24.f, -12.f, -6.f, 0.f};
 };
