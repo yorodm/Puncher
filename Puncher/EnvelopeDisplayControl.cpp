@@ -1,5 +1,6 @@
 #include "EnvelopeDisplayControl.h"
 #include "Puncher.h"
+#include <vector>
 
 EnvelopeDisplayControl::EnvelopeDisplayControl(const IRECT& bounds, int attackParam, int sustainParam, int outputParam)
 : IControl(bounds, {attackParam, sustainParam, outputParam})
@@ -9,10 +10,10 @@ EnvelopeDisplayControl::EnvelopeDisplayControl(const IRECT& bounds, int attackPa
 
 void EnvelopeDisplayControl::OnResize()
 {
-  if(mRECT.Empty()) return; // Not sure if I need to guard against this
+  if(mRECT.Empty()) return;
   const float pad = 10.f;
-  const float bottomPad = 30.f; // space for labels
-  mPlotBounds = mRECT.GetPadded(-pad, -pad, -pad, -bottomPad);
+  const float topPad = 25.f; // space for labels
+  mPlotBounds = mRECT.GetPadded(-pad, -topPad, -pad, -pad);
   SetDirty(false);
 }
 
@@ -32,51 +33,61 @@ void EnvelopeDisplayControl::Draw(IGraphics& g)
   // Normalize values to 0-1 range for visualization
   const float attackNorm = static_cast<float>((attackVal + 100.0) / 200.0);
   const float sustainNorm = static_cast<float>((sustainVal + 100.0) / 200.0);
-  const float outputNorm = static_cast<float>((outputVal + 12.0) / 18.0);
 
   // Calculate envelope curve points
   const int numPoints = 100;
+  std::vector<float> plotYs(numPoints);
 
-  // Build the path
   for (int i = 0; i < numPoints; i++)
   {
     const float t = static_cast<float>(i) / (numPoints - 1);
-    float x = mPlotBounds.L + t * mPlotBounds.W();
+    const float x = mPlotBounds.L + t * mPlotBounds.W();
 
     float y;
     if (t < 0.3f)
     {
-      // Attack phase: ramp from 0 to peak
       const float attackT = t / 0.3f;
       const float peak = 0.2f + attackNorm * 0.8f;
       y = attackT * peak;
     }
     else if (t < 0.7f)
     {
-      // Sustain phase: hold at sustain level
       const float peak = 0.2f + attackNorm * 0.8f;
       const float sustainLevel = sustainNorm * peak;
       y = sustainLevel;
     }
     else
     {
-      // Output tail: decay based on output
       const float sustainLevel = sustainNorm * (0.2f + attackNorm * 0.8f);
       const float decayT = (t - 0.7f) / 0.3f;
       y = sustainLevel * (1.0f - decayT * 0.5f);
     }
 
-    // Scale Y to bounds (invert: higher value = higher on screen)
-    const float plotY = mPlotBounds.B - y * mPlotBounds.H();
-
-    if (i == 0)
-      g.PathMoveTo(x, plotY);
-    else
-      g.PathLineTo(x, plotY);
+    plotYs[i] = mPlotBounds.B - y * mPlotBounds.H();
   }
 
-  // Draw curve stroke with gradient
-  g.PathStroke(IPattern::CreateLinearGradient(mPlotBounds, EDirection::Vertical, {{IColor(255, 66, 135, 245), 0.f}, {IColor(255, 52, 199, 89), 1.f}}), 2.5f);
+  // Build and fill the area path (curve + bottom edge)
+  g.PathMoveTo(mPlotBounds.L, mPlotBounds.B);
+  for (int i = 0; i < numPoints; i++)
+  {
+    const float x = mPlotBounds.L + static_cast<float>(i) / (numPoints - 1) * mPlotBounds.W();
+    g.PathLineTo(x, plotYs[i]);
+  }
+  g.PathLineTo(mPlotBounds.R, mPlotBounds.B);
+  g.PathClose();
+
+  g.PathFill(IPattern::CreateLinearGradient(mPlotBounds, EDirection::Vertical,
+    {{IColor(80, 66, 135, 245), 0.f}, {IColor(80, 52, 199, 89), 1.f}}));
+
+  // Draw curve stroke
+  g.PathMoveTo(mPlotBounds.L, plotYs[0]);
+  for (int i = 1; i < numPoints; i++)
+  {
+    const float x = mPlotBounds.L + static_cast<float>(i) / (numPoints - 1) * mPlotBounds.W();
+    g.PathLineTo(x, plotYs[i]);
+  }
+  g.PathStroke(IPattern::CreateLinearGradient(mPlotBounds, EDirection::Vertical,
+    {{IColor(255, 66, 135, 245), 0.f}, {IColor(255, 52, 199, 89), 1.f}}), 2.5f);
 
   // Draw region divider lines
   IColor dividerColor(100, 180, 180, 180);
@@ -85,11 +96,9 @@ void EnvelopeDisplayControl::Draw(IGraphics& g)
   g.DrawLine(dividerColor, div1X, mPlotBounds.T + 5.f, div1X, mPlotBounds.B - 5.f, nullptr, 1.f);
   g.DrawLine(dividerColor, div2X, mPlotBounds.T + 5.f, div2X, mPlotBounds.B - 5.f, nullptr, 1.f);
 
-  // Draw region marker labels
+  // Draw region marker labels at the top
   IText labelFont(11, EAlign::Center, IColor(255, 100, 100, 100));
-
-  const float labelY = mPlotBounds.B + 15.f;
+  const float labelY = mPlotBounds.T - 12.f;
   g.DrawText(labelFont, "ATTACK", mPlotBounds.L + 0.15f * mPlotBounds.W(), labelY);
   g.DrawText(labelFont, "SUSTAIN", mPlotBounds.L + 0.5f * mPlotBounds.W(), labelY);
-  g.DrawText(labelFont, "OUTPUT", mPlotBounds.L + 0.85f * mPlotBounds.W(), labelY);
 }
