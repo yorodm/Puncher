@@ -78,7 +78,8 @@ void IVolumeNiceMeter::DrawChannel(IGraphics& g, const IRECT& r, int ch)
   // Dark gray background (empty meter area)
   g.FillRect(IColor(255, 40, 40, 40), r);
 
-  // Gradient fill for the volume level
+  // Gradient fill scoped to the full channel rect so colors map to dBFS level:
+  // -60dB = green (bottom), -18dB = green, -6dB = yellow, 0dB = red (top)
   IRECT fillRect = r.FracRectVertical(normAvg, false);
   if (!fillRect.Empty())
   {
@@ -86,9 +87,10 @@ void IVolumeNiceMeter::DrawChannel(IGraphics& g, const IRECT& r, int ch)
       r,
       EDirection::Vertical,
       {
-        {IColor(255, 0, 255, 0), 0.0f},     // green at bottom (quiet)
-        {IColor(255, 255, 255, 0), 0.7f},   // yellow
-        {IColor(255, 255, 0, 0), 1.0f}      // red at top (loud)
+        {IColor(255, 255, 0, 0),   0.0f},   // red at top (0dBFS clipping)
+        {IColor(255, 255, 255, 0), 0.1f},   // yellow at -6dBFS
+        {IColor(255, 0, 255, 0),   0.3f},   // green at -18dBFS
+        {IColor(255, 0, 255, 0),   1.0f}    // green at bottom (-60dBFS)
       }
     );
 

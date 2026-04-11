@@ -29,7 +29,7 @@ private:
   // Clip flags (persist until reset)
   bool mClip[2] = {false, false};
 
-  // Settings
+  // Settings (dBFS: 0 = full scale / clipping)
   float mMinDB = -60.f;
   float mMaxDB = 0.f;
 };
