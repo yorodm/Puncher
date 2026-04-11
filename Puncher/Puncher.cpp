@@ -55,8 +55,8 @@ void Puncher::CreateEditor(IGraphics* pGraphics, WDL_String buildInfoStr) {
     // Horizontal split
     RectSplitter h(innerBounds);
 
-    IRECT leftMeter  = h.TakeLeft(0.05f);
-    IRECT rightMeter = h.TakeRight(0.05f);
+    IRECT leftMeter  = h.TakeLeft(0.1f);
+    IRECT rightMeter = h.TakeRight(0.1f);
     IRECT middle     = h.TakeRemaining();
 
     // Split middle into two equal sections
@@ -67,8 +67,8 @@ void Puncher::CreateEditor(IGraphics* pGraphics, WDL_String buildInfoStr) {
 
     // Padding
     float pad = innerBounds.W() * 0.01f;
-    sectionA = sectionA.GetPadded(-pad);
-    sectionB = sectionB.GetPadded(-pad);
+    //sectionA = sectionA.GetPadded(-pad);
+    //sectionB = sectionB.GetPadded(-pad);
 
     // Vertical split for section A
     RectSplitter aSplit(sectionA);
@@ -81,7 +81,6 @@ void Puncher::CreateEditor(IGraphics* pGraphics, WDL_String buildInfoStr) {
 
     IRECT versionSection = bSplit.TakeTop(0.2f);
     IRECT slidersSection = bSplit.TakeRemaining();
-
 
     if (pGraphics->NControls()) {
       pGraphics->GetBackgroundControl()->SetTargetAndDrawRECTs(bounds);

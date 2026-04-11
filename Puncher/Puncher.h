@@ -76,39 +76,34 @@ public:
   RectSplitter(const IRECT& r)
   : mRemaining(r) {}
 
-  // Take from left (consumes space)
   IRECT TakeLeft(float frac)
   {
-    IRECT slice = mRemaining.FracRectHorizontal(frac, true);
-    mRemaining = mRemaining.GetFromLeft(mRemaining.W() * frac);
+    IRECT slice = mRemaining.FracRectHorizontal(frac);
+    mRemaining = mRemaining.GetReducedFromLeft(slice.W());
     return slice;
   }
 
-  // Take from right (consumes space)
   IRECT TakeRight(float frac)
   {
-    IRECT slice = mRemaining.FracRectHorizontal(frac, false);
-    mRemaining = mRemaining.GetFromRight(mRemaining.W() * frac);
+    IRECT slice = mRemaining.FracRectHorizontal(frac, true);
+    mRemaining = mRemaining.GetReducedFromRight(slice.W());
     return slice;
   }
 
-  // Take from top (consumes space)
   IRECT TakeTop(float frac)
   {
     IRECT slice = mRemaining.FracRectVertical(frac, true);
-    mRemaining = mRemaining.GetFromTop(mRemaining.H() * frac);
+    mRemaining = mRemaining.GetReducedFromTop(slice.H());
     return slice;
   }
 
-  // Take from bottom (consumes space)
   IRECT TakeBottom(float frac)
   {
-    IRECT slice = mRemaining.FracRectVertical(frac, false);
-    mRemaining = mRemaining.GetFromBottom(mRemaining.H() * frac);
+    IRECT slice = mRemaining.FracRectVertical(frac);
+    mRemaining = mRemaining.GetReducedFromBottom(slice.H());
     return slice;
   }
 
-  // Take all remaining
   IRECT TakeRemaining()
   {
     return mRemaining;

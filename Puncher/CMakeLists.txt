@@ -16,5 +16,5 @@ iplug_add_plugin(${PROJECT_NAME}
   RESOURCES
     resources/fonts/Roboto-Regular.ttf
   FORMATS
-    VST3
+    VST3 APP
 )
