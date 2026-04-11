@@ -52,38 +52,47 @@ void Puncher::CreateEditor(IGraphics* pGraphics, WDL_String buildInfoStr) {
     const IRECT bounds = pGraphics->GetBounds();
     const IRECT innerBounds = bounds.GetPadded(-10.f);
 
-    // Three vertical columns: input meter | center | output meter
-    const float meterWidth = 40.f;
-    const IRECT inputMeterRect = innerBounds.GetFromLeft(meterWidth);
-    const IRECT outputMeterRect = innerBounds.GetFromRight(meterWidth);
-    const IRECT centerPanel = innerBounds;
+    // Horizontal split
+    RectSplitter h(innerBounds);
 
-    // Center panel: split into left (title + envelope) and right (version + sliders)
-    const IRECT leftPanel = centerPanel.GetFromLeft(300).GetReducedFromLeft(meterWidth);
-    const IRECT rightPanel = centerPanel.GetFromRight(220).GetReducedFromRight(meterWidth);
+    IRECT leftMeter  = h.TakeLeft(0.05f);
+    IRECT rightMeter = h.TakeRight(0.05f);
+    IRECT middle     = h.TakeRemaining();
 
-    // Left panel: title at top, envelope fills rest
-    const IRECT titleBounds = leftPanel.GetFromTop(50).GetCentredInside(200, 40);
-    const IRECT envelopeBounds = leftPanel;
+    // Split middle into two equal sections
+    RectSplitter midSplit(middle);
 
-    // Right panel: version at top, sliders below
-    const IRECT versionBounds = rightPanel.GetFromTop(30).GetPadded(-5.f);
-    const IRECT sliderPanel = rightPanel.GetFromBottom(rightPanel.H() - 35.f).GetPadded(-10);
+    IRECT sectionA = midSplit.TakeLeft(0.5f);
+    IRECT sectionB = midSplit.TakeRemaining();
 
-    // Meter bounds
-    const IRECT inputMeterBounds = inputMeterRect.GetPadded(-2.f, -5.f, -2.f, -5.f);
-    const IRECT outputMeterBounds = outputMeterRect.GetPadded(-2.f, -5.f, -2.f, -5.f);
+    // Padding
+    float pad = innerBounds.W() * 0.01f;
+    sectionA = sectionA.GetPadded(-pad);
+    sectionB = sectionB.GetPadded(-pad);
+
+    // Vertical split for section A
+    RectSplitter aSplit(sectionA);
+
+    IRECT titleSection    = aSplit.TakeTop(0.2f);
+    IRECT envelopeSection = aSplit.TakeRemaining();
+
+    // Vertical split for section B
+    RectSplitter bSplit(sectionB);
+
+    IRECT versionSection = bSplit.TakeTop(0.2f);
+    IRECT slidersSection = bSplit.TakeRemaining();
+
 
     if (pGraphics->NControls()) {
       pGraphics->GetBackgroundControl()->SetTargetAndDrawRECTs(bounds);
-      pGraphics->GetControlWithTag(kCtrlTagTitle)->SetTargetAndDrawRECTs(titleBounds);
-      pGraphics->GetControlWithTag(kCtrlTagEnvelope)->SetTargetAndDrawRECTs(envelopeBounds);
-      pGraphics->GetControlWithTag(kCtrlTagInputMeter)->SetTargetAndDrawRECTs(inputMeterBounds);
-      pGraphics->GetControlWithTag(kCtrlTagOutputMeter)->SetTargetAndDrawRECTs(outputMeterBounds);
-      pGraphics->GetControlWithTag(kCtrlTagAttack)->SetTargetAndDrawRECTs(sliderPanel.GetGridCell(0, 0, 1, 3).GetPadded(-8));
-      pGraphics->GetControlWithTag(kCtrlTagSustain)->SetTargetAndDrawRECTs(sliderPanel.GetGridCell(0, 1, 1, 3).GetPadded(-8));
-      pGraphics->GetControlWithTag(kCtrlTagOutput)->SetTargetAndDrawRECTs(sliderPanel.GetGridCell(0, 2, 1, 3).GetPadded(-8));
-      pGraphics->GetControlWithTag(kCtrlTagVersionNumber)->SetTargetAndDrawRECTs(versionBounds);
+      pGraphics->GetControlWithTag(kCtrlTagTitle)->SetTargetAndDrawRECTs(titleSection);
+      pGraphics->GetControlWithTag(kCtrlTagEnvelope)->SetTargetAndDrawRECTs(envelopeSection);
+      pGraphics->GetControlWithTag(kCtrlTagInputMeter)->SetTargetAndDrawRECTs(leftMeter);
+      pGraphics->GetControlWithTag(kCtrlTagOutputMeter)->SetTargetAndDrawRECTs(rightMeter);
+      pGraphics->GetControlWithTag(kCtrlTagAttack)->SetTargetAndDrawRECTs(slidersSection.GetGridCell(0, 0, 1, 3).GetPadded(-8));
+      pGraphics->GetControlWithTag(kCtrlTagSustain)->SetTargetAndDrawRECTs(slidersSection.GetGridCell(0, 1, 1, 3).GetPadded(-8));
+      pGraphics->GetControlWithTag(kCtrlTagOutput)->SetTargetAndDrawRECTs(slidersSection.GetGridCell(0, 2, 1, 3).GetPadded(-8));
+      pGraphics->GetControlWithTag(kCtrlTagVersionNumber)->SetTargetAndDrawRECTs(versionSection);
       return;
     }
 
@@ -93,18 +102,18 @@ void Puncher::CreateEditor(IGraphics* pGraphics, WDL_String buildInfoStr) {
     pGraphics->AttachPanelBackground(COLOR_LIGHT_GRAY);
 
     // Center panel controls
-    pGraphics->AttachControl(new ITextControl(titleBounds, "Puncher", IText(30)), kCtrlTagTitle);
-    pGraphics->AttachControl(new EnvelopeDisplayControl(envelopeBounds, kParamAttack, kParamSustain, kParamOutput), kCtrlTagEnvelope);
+    pGraphics->AttachControl(new ITextControl(titleSection, "Puncher", IText(30)), kCtrlTagTitle);
+    pGraphics->AttachControl(new EnvelopeDisplayControl(envelopeSection, kParamAttack, kParamSustain, kParamOutput), kCtrlTagEnvelope);
 
     // Meters
-    pGraphics->AttachControl(mInputMeter = new IVMeterControl<2>(inputMeterBounds, "", DEFAULT_STYLE, EDirection::Vertical, {"L", "R"}), kCtrlTagInputMeter);
-    pGraphics->AttachControl(mOutputMeter = new IVMeterControl<2>(outputMeterBounds, "", DEFAULT_STYLE, EDirection::Vertical, {"L", "R"}), kCtrlTagOutputMeter);
+    pGraphics->AttachControl(mInputMeter = new IVMeterControl<2>(leftMeter, "", DEFAULT_STYLE, EDirection::Vertical, {"L", "R"}), kCtrlTagInputMeter);
+    pGraphics->AttachControl(mOutputMeter = new IVMeterControl<2>(rightMeter, "", DEFAULT_STYLE, EDirection::Vertical, {"L", "R"}), kCtrlTagOutputMeter);
 
     // Right panel controls
-    pGraphics->AttachControl(new ITextControl(versionBounds, buildInfoStr.Get(), DEFAULT_TEXT.WithAlign(EAlign::Center).WithSize(10)), kCtrlTagVersionNumber);
-    pGraphics->AttachControl(new IVSliderControl(sliderPanel.GetGridCell(0, 0, 1, 3).GetPadded(-8), kParamAttack, "Attack"), kCtrlTagAttack);
-    pGraphics->AttachControl(new IVSliderControl(sliderPanel.GetGridCell(0, 1, 1, 3).GetPadded(-8), kParamSustain, "Sustain"), kCtrlTagSustain);
-    pGraphics->AttachControl(new IVSliderControl(sliderPanel.GetGridCell(0, 2, 1, 3).GetPadded(-8), kParamOutput, "Output"), kCtrlTagOutput);
+    pGraphics->AttachControl(new ITextControl(versionSection, buildInfoStr.Get(), DEFAULT_TEXT.WithAlign(EAlign::Center).WithSize(10)), kCtrlTagVersionNumber);
+    pGraphics->AttachControl(new IVSliderControl(slidersSection.GetGridCell(0, 0, 1, 3).GetPadded(-8), kParamAttack, "Attack"), kCtrlTagAttack);
+    pGraphics->AttachControl(new IVSliderControl(slidersSection.GetGridCell(0, 1, 1, 3).GetPadded(-8), kParamSustain, "Sustain"), kCtrlTagSustain);
+    pGraphics->AttachControl(new IVSliderControl(slidersSection.GetGridCell(0, 2, 1, 3).GetPadded(-8), kParamOutput, "Output"), kCtrlTagOutput);
 }
 #endif
 

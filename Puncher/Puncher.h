@@ -61,10 +61,60 @@ private:
   double mTmpEnv2 = 0.0;
   double mTmpEnv3 = 0.0;
 
-  IPeakAvgSender<2> mInputPeakSender;
-  IPeakAvgSender<2> mOutputPeakSender;
+  IPeakSender<2> mInputPeakSender;
+  IPeakSender<2> mOutputPeakSender;
 #if IPLUG_EDITOR
   IVMeterControl<2>* mInputMeter = nullptr;
   IVMeterControl<2>* mOutputMeter = nullptr;
 #endif
 };
+
+#if IPLUG_EDITOR
+class RectSplitter
+{
+public:
+  RectSplitter(const IRECT& r)
+  : mRemaining(r) {}
+
+  // Take from left (consumes space)
+  IRECT TakeLeft(float frac)
+  {
+    IRECT slice = mRemaining.FracRectHorizontal(frac, true);
+    mRemaining = mRemaining.GetFromLeft(mRemaining.W() * frac);
+    return slice;
+  }
+
+  // Take from right (consumes space)
+  IRECT TakeRight(float frac)
+  {
+    IRECT slice = mRemaining.FracRectHorizontal(frac, false);
+    mRemaining = mRemaining.GetFromRight(mRemaining.W() * frac);
+    return slice;
+  }
+
+  // Take from top (consumes space)
+  IRECT TakeTop(float frac)
+  {
+    IRECT slice = mRemaining.FracRectVertical(frac, true);
+    mRemaining = mRemaining.GetFromTop(mRemaining.H() * frac);
+    return slice;
+  }
+
+  // Take from bottom (consumes space)
+  IRECT TakeBottom(float frac)
+  {
+    IRECT slice = mRemaining.FracRectVertical(frac, false);
+    mRemaining = mRemaining.GetFromBottom(mRemaining.H() * frac);
+    return slice;
+  }
+
+  // Take all remaining
+  IRECT TakeRemaining()
+  {
+    return mRemaining;
+  }
+
+private:
+  IRECT mRemaining;
+};
+#endif
