@@ -10,6 +10,8 @@ iplug_add_plugin(${PROJECT_NAME}
   SOURCES
     EnvelopeDisplayControl.cpp
     EnvelopeDisplayControl.h
+    IVolumeNiceMeter.cpp
+    IVolumeNiceMeter.h
     Puncher.cpp
     Puncher.h
     resources/resource.h

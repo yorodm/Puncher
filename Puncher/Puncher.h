@@ -2,6 +2,7 @@
 
 #include "IPlug_include_in_plug_hdr.h"
 #include "ISender.h"
+#include "IVolumeNiceMeter.h"
 
 const int kNumPresets = 1;
 
@@ -64,8 +65,8 @@ private:
   IPeakAvgSender<2> mInputPeakSender;
   IPeakAvgSender<2> mOutputPeakSender;
 #if IPLUG_EDITOR
-  IVLEDMeterControl<2>* mInputMeter = nullptr;
-  IVLEDMeterControl<2>* mOutputMeter = nullptr;
+  IVolumeNiceMeter* mInputMeter = nullptr;
+  IVolumeNiceMeter* mOutputMeter = nullptr;
 #endif
 };
 
