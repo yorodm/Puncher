@@ -33,6 +33,14 @@ void EnvelopeDisplayControl::Draw(IGraphics& g)
   // Normalize values to 0-1 range for visualization
   const float attackNorm = static_cast<float>((attackVal + 100.0) / 200.0);
   const float sustainNorm = static_cast<float>((sustainVal + 100.0) / 200.0);
+  const float outputNorm = static_cast<float>((outputVal + 12.0) / 18.0);
+
+  // Interpolate graph color from blue (low output) to red (high output)
+  const int cr = static_cast<int>(66 + (245 - 66) * outputNorm);
+  const int cg = static_cast<int>(135 + (66 - 135) * outputNorm);
+  const int cb = static_cast<int>(245 + (66 - 245) * outputNorm);
+  const IColor graphColor(255, cr, cg, cb);
+  const IColor graphColorFill(80, cr, cg, cb);
 
   // Calculate envelope curve points
   const int numPoints = 100;
@@ -77,7 +85,7 @@ void EnvelopeDisplayControl::Draw(IGraphics& g)
   g.PathClose();
 
   g.PathFill(IPattern::CreateLinearGradient(mPlotBounds, EDirection::Vertical,
-    {{IColor(80, 66, 135, 245), 0.f}, {IColor(80, 52, 199, 89), 1.f}}));
+    {{graphColorFill.WithOpacity(0.3f), 0.f}, {graphColorFill, 1.f}}));
 
   // Draw curve stroke
   g.PathMoveTo(mPlotBounds.L, plotYs[0]);
@@ -86,8 +94,7 @@ void EnvelopeDisplayControl::Draw(IGraphics& g)
     const float x = mPlotBounds.L + static_cast<float>(i) / (numPoints - 1) * mPlotBounds.W();
     g.PathLineTo(x, plotYs[i]);
   }
-  g.PathStroke(IPattern::CreateLinearGradient(mPlotBounds, EDirection::Vertical,
-    {{IColor(255, 66, 135, 245), 0.f}, {IColor(255, 52, 199, 89), 1.f}}), 2.5f);
+  g.PathStroke(graphColor, 2.5f);
 
   // Draw region divider lines
   IColor dividerColor(100, 180, 180, 180);

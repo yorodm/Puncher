@@ -105,8 +105,8 @@ void Puncher::CreateEditor(IGraphics* pGraphics, WDL_String buildInfoStr) {
     pGraphics->AttachControl(new EnvelopeDisplayControl(envelopeSection, kParamAttack, kParamSustain, kParamOutput), kCtrlTagEnvelope);
 
     // Meters
-    pGraphics->AttachControl(mInputMeter = new IVLEDMeterControl<2>(leftMeter, "", DEFAULT_STYLE, EDirection::Vertical, {"L", "R"}), kCtrlTagInputMeter);
-    pGraphics->AttachControl(mOutputMeter = new IVLEDMeterControl<2>(rightMeter, "", DEFAULT_STYLE, EDirection::Vertical, {"L", "R"}), kCtrlTagOutputMeter);
+    pGraphics->AttachControl(mInputMeter = new IVLEDMeterControl<2>(leftMeter, "", DEFAULT_STYLE, EDirection::Vertical), kCtrlTagInputMeter);
+    pGraphics->AttachControl(mOutputMeter = new IVLEDMeterControl<2>(rightMeter, "", DEFAULT_STYLE, EDirection::Vertical), kCtrlTagOutputMeter);
 
     // Right panel controls
     pGraphics->AttachControl(new ITextControl(versionSection, buildInfoStr.Get(), DEFAULT_TEXT.WithAlign(EAlign::Center).WithSize(10)), kCtrlTagVersionNumber);
