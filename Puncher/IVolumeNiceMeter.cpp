@@ -1,21 +1,27 @@
 #include "IVolumeNiceMeter.h"
 #include "IGraphics.h"
 #include "ISender.h"
-#include <cmath>
+#include "Puncher.h"
+#include <IGraphicsStructs.h>
 #include <algorithm>
 
+
+// Class Implementation
 IVolumeNiceMeter::IVolumeNiceMeter(const IRECT& bounds)
 : IControl(bounds)
 {}
 
-float IVolumeNiceMeter::AmpToDB(float amp) const
-{
-  return 20.f * std::log10(std::max(amp, 1e-6f));
-}
 
 float IVolumeNiceMeter::DBToNorm(float db) const
 {
   return (db - mMinDB) / (mMaxDB - mMinDB);
+}
+
+float IVolumeNiceMeter::GetMaxPeak() {
+    float peakDBLeft  = std::clamp(mPeakDB[0], mMinDB, mMaxDB);
+    float peakDBRight  = std::clamp(mPeakDB[1], mMinDB, mMaxDB);
+    float maxPeak = std::max(peakDBLeft,peakDBRight);
+    return maxPeak;
 }
 
 void IVolumeNiceMeter::OnMsgFromDelegate(int msgTag, int dataSize, const void* pData)
@@ -57,14 +63,27 @@ void IVolumeNiceMeter::OnMouseDblClick(float x, float y, const IMouseMod& mod)
 
 void IVolumeNiceMeter::Draw(IGraphics& g)
 {
-  IRECT bounds = mRECT;
-  float half = bounds.W() * 0.5f;
+  RectSplitter bounds = RectSplitter(mRECT);
+  IRECT top = bounds.TakeTop(0.1f);
+  IRECT left  = bounds.TakeLeft(0.5f).GetPadded(-4);
+  IRECT right = bounds.TakeRemaining().GetPadded(-4);
 
-  IRECT left  = bounds.GetFromLeft(half).GetPadded(-4);
-  IRECT right = bounds.GetFromRight(half).GetPadded(-4);
-
+  // Draw the label
+  DrawLabel(g,top);
+  // Draw the channels
   DrawChannel(g, left, 0);
   DrawChannel(g, right, 1);
+}
+
+void IVolumeNiceMeter::DrawLabel(IGraphics& g, const IRECT& r) {
+    // Draw the label
+    WDL_String str;
+    float maxPeak = GetMaxPeak();
+    str.SetFormatted(32, "%.1f", maxPeak);
+    bool anyClipped = mClip[0] || mClip[1];
+    const IColor labelColor = anyClipped ? IColor(255, 255, 60, 60) : IColor(255, 0, 0, 0);
+    IText labelFont(14, EAlign::Center, labelColor);
+    g.DrawText(labelFont, str.Get(), r);
 }
 
 void IVolumeNiceMeter::DrawChannel(IGraphics& g, const IRECT& r, int ch)

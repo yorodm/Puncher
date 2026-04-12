@@ -2,6 +2,8 @@
 
 #include "IControl.h"
 #include "IPlugStructs.h"
+#include <IGraphics.h>
+#include <IGraphicsStructs.h>
 #include <array>
 
 using namespace iplug;
@@ -17,10 +19,10 @@ public:
   void OnMouseDblClick(float x, float y, const IMouseMod& mod) override;
 
 private:
+  void DrawLabel(IGraphics& g, const IRECT& r);
   void DrawChannel(IGraphics& g, const IRECT& r, int ch);
-  float AmpToDB(float amp) const;
   float DBToNorm(float db) const;
-
+  float GetMaxPeak();
 private:
   // dB values for display (avg for bar fill, peak for indicator)
   std::array<float, 2> mAvgDB   = {-60.f, -60.f};

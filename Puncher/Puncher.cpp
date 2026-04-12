@@ -107,7 +107,6 @@ void Puncher::CreateEditor(IGraphics* pGraphics, WDL_String buildInfoStr) {
     // Meters
     pGraphics->AttachControl(mInputMeter = new IVolumeNiceMeter(leftMeter), kCtrlTagInputMeter);
     pGraphics->AttachControl(mOutputMeter = new IVolumeNiceMeter(rightMeter), kCtrlTagOutputMeter);
-
     // Right panel controls
     pGraphics->AttachControl(new ITextControl(versionSection, buildInfoStr.Get(), DEFAULT_TEXT.WithAlign(EAlign::Center).WithSize(10)), kCtrlTagVersionNumber);
     pGraphics->AttachControl(new IVSliderControl(slidersSection.GetGridCell(0, 0, 1, 3).GetPadded(-8), kParamAttack, "Attack"), kCtrlTagAttack);
