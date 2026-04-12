@@ -2,7 +2,7 @@
 
 **Puncher** is a transient shaping audio plugin built with the [iPlug2](https://github.com/iPlug2/iPlug2) framework. It provides precise control over the attack and sustain characteristics of audio signals, making it ideal for enhancing drums, percussion, and other transient-rich material.
 
-This is a port of Reapers's JSFX Transient Controller.
+This is a port of Reapers's JSFX Transient Controller created by  Michael Gruhn.
 
 ## What It Does
 
